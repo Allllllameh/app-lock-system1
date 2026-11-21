@@ -37,6 +37,7 @@ class LoginActivity : AppCompatActivity() {
 
             CoroutineScope(Dispatchers.Main).launch {
                 try {
+                    // ۱. لاگین
                     Supabase.client.auth.signInWith(Email) {
                         this.email = email
                         password = pass
@@ -44,12 +45,12 @@ class LoginActivity : AppCompatActivity() {
                     val userId = Supabase.client.auth.currentUserOrNull()?.id
 
                     if (userId != null) {
-                        // ذخیره نام
+                        // ۲. ذخیره نام فارسی
                         Supabase.client.from("profiles").update(
                             buildJsonObject { put("full_name", name) }
                         ) { filter { eq("id", userId) } }
 
-                        // ارسال لیست اپ‌ها
+                        // ۳. ارسال لیست اپ‌ها
                         val pm = packageManager
                         val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
                         val appsJson = buildJsonArray {
@@ -63,18 +64,17 @@ class LoginActivity : AppCompatActivity() {
                             }
                         }
 
-                        // 🌟 اصلاح شد: onConflict داخل بلوک قرار گرفت
+                        // 🌟 اصلاح نهایی: onConflict به عنوان پارامتر مستقیم تابع upsert
                         Supabase.client.from("devices").upsert(
                             buildJsonObject {
                                 put("user_id", userId)
                                 put("installed_apps", appsJson)
                                 put("device_name", android.os.Build.MODEL)
-                            }
-                        ) {
-                            onConflict = "user_id"
-                        }
+                            },
+                            onConflict = "user_id" // پارامتر مستقیم
+                        )
 
-                        // دریافت قوانین
+                        // ۴. دریافت قوانین قفل
                         val policyResult = Supabase.client.from("policies").select {
                             filter { eq("user_id", userId) }
                         }.decodeSingleOrNull<JsonObject>()
