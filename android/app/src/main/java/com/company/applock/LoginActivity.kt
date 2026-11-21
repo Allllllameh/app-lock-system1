@@ -64,16 +64,15 @@ class LoginActivity : AppCompatActivity() {
                             }
                         }
 
-                        // 🌟 اینجا اصلاح شد (اضافه شدن onConflict)
-                        Supabase.client.from("devices").upsert(
-                            buildJsonObject {
-                                put("user_id", userId)
-                                put("installed_apps", appsJson)
-                                put("device_name", android.os.Build.MODEL)
-                            }
-                        ) {
-                            onConflict = "user_id"
-                        }
+                        // 🌟 این بخش را جایگزین کنید
+Supabase.client.from("devices").upsert(
+    data = buildJsonObject {
+        put("user_id", userId)
+        put("installed_apps", appsJson)
+        put("device_name", android.os.Build.MODEL)
+    },
+    onConflict = "user_id" // حالا به عنوان آرگومان نام‌دار پاس می‌شود
+)
 
                         // ۴. دریافت قوانین قفل و ذخیره در گوشی
                         val policyResult = Supabase.client.from("policies").select {
