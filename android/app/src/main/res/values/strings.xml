@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">AppLock</string>
+    <string name="accessibility_desc">این سرویس برای قفل کردن اپلیکیشن‌ها استفاده می‌شود.</string>
+</resources>
