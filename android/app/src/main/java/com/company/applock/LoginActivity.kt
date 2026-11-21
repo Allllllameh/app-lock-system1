@@ -37,7 +37,6 @@ class LoginActivity : AppCompatActivity() {
 
             CoroutineScope(Dispatchers.Main).launch {
                 try {
-                    // ۱. لاگین
                     Supabase.client.auth.signInWith(Email) {
                         this.email = email
                         password = pass
@@ -45,12 +44,12 @@ class LoginActivity : AppCompatActivity() {
                     val userId = Supabase.client.auth.currentUserOrNull()?.id
 
                     if (userId != null) {
-                        // ۲. ذخیره نام فارسی
+                        // ذخیره نام
                         Supabase.client.from("profiles").update(
                             buildJsonObject { put("full_name", name) }
                         ) { filter { eq("id", userId) } }
 
-                        // ۳. ارسال لیست اپ‌ها
+                        // ارسال لیست اپ‌ها
                         val pm = packageManager
                         val apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
                         val appsJson = buildJsonArray {
@@ -64,17 +63,18 @@ class LoginActivity : AppCompatActivity() {
                             }
                         }
 
-                        // 🌟 این بخش را جایگزین کنید
-Supabase.client.from("devices").upsert(
-    data = buildJsonObject {
-        put("user_id", userId)
-        put("installed_apps", appsJson)
-        put("device_name", android.os.Build.MODEL)
-    },
-    onConflict = "user_id" // حالا به عنوان آرگومان نام‌دار پاس می‌شود
-)
+                        // 🌟 اصلاح شد: onConflict داخل بلوک قرار گرفت
+                        Supabase.client.from("devices").upsert(
+                            buildJsonObject {
+                                put("user_id", userId)
+                                put("installed_apps", appsJson)
+                                put("device_name", android.os.Build.MODEL)
+                            }
+                        ) {
+                            onConflict = "user_id"
+                        }
 
-                        // ۴. دریافت قوانین قفل و ذخیره در گوشی
+                        // دریافت قوانین
                         val policyResult = Supabase.client.from("policies").select {
                             filter { eq("user_id", userId) }
                         }.decodeSingleOrNull<JsonObject>()
